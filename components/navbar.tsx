@@ -6,6 +6,16 @@ import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ModeToggle } from "./mode-toggle";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
 function HamburgerIcon({
   className,
@@ -41,6 +51,8 @@ type NavbarProps = {
   ctaHref?: string;
   ctaText?: string;
   className?: string;
+  user: any;
+  profile: any;
 };
 
 const DEFAULT_LINKS: NavLink[] = [{ href: "/", label: "Home" }];
@@ -57,6 +69,8 @@ export default function Navbar({
   ctaHref = "/get-started",
   ctaText = "Get Started",
   className,
+  user,
+  profile,
 }: NavbarProps) {
   const pathname = usePathname();
   const [open, setOpen] = React.useState(false);
@@ -102,9 +116,50 @@ export default function Navbar({
 
         {/* Right: actions */}
         <div className="hidden md:flex items-center gap-3">
-          <Button asChild variant="ghost" size="sm" className="font-medium">
-            <Link href={signInHref}>{signInText}</Link>
-          </Button>
+          {!user ? (
+            <Button asChild variant="ghost" size="sm" className="font-medium">
+              <Link href={signInHref}>{signInText}</Link>
+            </Button>
+          ) : (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="relative h-8 w-8 rounded-full"
+                >
+                  <Avatar className="h-9 w-9">
+                    <AvatarImage src="/avatars/03.png" alt={profile.name} />
+                    <AvatarFallback>{profile.name.charAt(0)}</AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm leading-none font-medium">
+                      {profile.name}
+                    </p>
+                    <p className="text-muted-foreground text-xs leading-none">
+                      {user.email}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem asChild>
+                    <Link href={"/account"}>Profile</Link>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+                <DropdownMenuItem asChild onSelect={(e) => e.preventDefault()}>
+                  <form action="/auth/signout" method="post">
+                    <button className="button block" type="submit">
+                      Sign out
+                    </button>
+                  </form>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
           <ModeToggle />
         </div>
 

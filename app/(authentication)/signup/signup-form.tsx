@@ -12,10 +12,10 @@ import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { login } from "../actions";
+import { signup } from "../actions";
 import { toast } from "sonner";
 
-export function SigninForm({
+export function SignupForm({
   className,
   ...props
 }: React.ComponentProps<"form">) {
@@ -28,17 +28,17 @@ export function SigninForm({
     const formData = new FormData(event.currentTarget);
 
     try {
-      const res = await login(formData);
+      const res = await signup(formData);
       if (!res.ok) {
-        toast.error(res.error ?? "Login failed");
+        toast.error(res.error ?? "Registration failed");
         return;
       }
-      toast.success("Logged in!");
+      toast.success("Successfully Registered!");
       router.push("/");
       router.refresh();
-    } catch (error) {
+    } catch (e) {
       toast.error("Something went wrong. Try again.");
-      console.error(error);
+      console.error(e);
     } finally {
       setIsLoading(false);
     }
@@ -52,9 +52,9 @@ export function SigninForm({
     >
       <FieldGroup>
         <div className="flex flex-col items-center gap-1 text-center">
-          <h1 className="text-2xl font-bold">Login to your account</h1>
+          <h1 className="text-2xl font-bold">Create your account</h1>
           <p className="text-muted-foreground text-sm text-balance">
-            Enter your email below to login to your account
+            Enter your email below to sign up
           </p>
         </div>
 
@@ -83,14 +83,14 @@ export function SigninForm({
 
         <Field>
           <Button type="submit" disabled={isLoading}>
-            {isLoading ? "Logging in..." : "Login"}
+            {isLoading ? "Signing up..." : "Sign Up"}
           </Button>
         </Field>
 
         <Field>
           <FieldDescription className="text-center">
-            Don&apos;t have an account?{" "}
-            <Link href="/signup" className="underline underline-offset-4">
+            Already have an account?{" "}
+            <Link href="/signin" className="underline underline-offset-4">
               Sign up
             </Link>
           </FieldDescription>
