@@ -1,3 +1,5 @@
+import { makeCreateWorkoutTool } from "@/lib/ai/tools/create-workout";
+import { createClient } from "@/utils/supabase/server";
 import {
   streamText,
   UIMessage,
@@ -9,9 +11,37 @@ import {
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
+  console.log("[/api/chat] route hit");
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+  console.log("[/api/chat] user:", user?.id, "error:", error?.message);
+
+  if (error || !user) return new Response("Unauthorized", { status: 401 });
+
+  async function getProfileByUserId(userId: string) {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id, days_per_week, experience_level, sex")
+      .eq("id", userId)
+      .single();
+    console.log("[/api/chat] profiles select =>", { data, error });
+    if (error) return null;
+    return data;
+  }
+
+  const createWorkout = makeCreateWorkoutTool({
+    userId: user.id,
+    getProfileByUserId,
+  });
+
   const { messages }: { messages: UIMessage[] } = await req.json();
 
   const SYSTEM_PROMPT = `You are a science-based lifting assistant.
+  - When a plan is requested, CALL the "createWorkout" tool immediately without asking for profile details; the tool will read the user's profile.
 - Cite high-quality sources (systematic reviews, position stands, meta-analyses). Use the searchPapers tool when claims need evidence.
 - If unsure, say so and note what evidence would resolve it.
 - Prefer practical programming guidance (sets, reps, RIR, rest), keep it brief and actionable.
@@ -26,11 +56,14 @@ export async function POST(req: Request) {
 - Use information from Chris Beardsley`;
 
   const result = streamText({
+    // model: "openai/gpt-5",
     model: "openai/gpt-4o-mini",
     system: SYSTEM_PROMPT,
     messages: convertToModelMessages(messages),
     stopWhen: stepCountIs(8),
-    tools: {},
+    tools: {
+      createWorkout,
+    },
   });
 
   return result.toUIMessageStreamResponse();

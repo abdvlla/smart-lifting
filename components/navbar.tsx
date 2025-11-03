@@ -55,7 +55,10 @@ type NavbarProps = {
   profile: any;
 };
 
-const DEFAULT_LINKS: NavLink[] = [{ href: "/", label: "Home" }];
+const DEFAULT_LINKS: NavLink[] = [
+  { href: "/", label: "Home" },
+  { href: "/workouts", label: "Workouts" },
+];
 
 export default function Navbar({
   links = DEFAULT_LINKS,
@@ -129,7 +132,11 @@ export default function Navbar({
                 >
                   <Avatar className="h-9 w-9">
                     <AvatarImage src="/avatars/03.png" alt={profile.name} />
-                    <AvatarFallback>{profile.name.charAt(0)}</AvatarFallback>
+                    <AvatarFallback>
+                      {profile.name
+                        ? profile.name.charAt(0).toUpperCase()
+                        : user.email.charAt(0).toUpperCase()}
+                    </AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
@@ -182,12 +189,61 @@ export default function Navbar({
               <NavItem key={l.href} {...l} />
             ))}
             <div className="mt-2 flex gap-2">
-              <Button asChild variant="ghost" className="flex-1">
-                <Link href={signInHref}>{signInText}</Link>
-              </Button>
-              <Button asChild className="flex-1">
-                <Link href={ctaHref}>{ctaText}</Link>
-              </Button>
+              {!user ? (
+                <Button
+                  asChild
+                  variant="ghost"
+                  size="sm"
+                  className="font-medium"
+                >
+                  <Link href={signInHref}>{signInText}</Link>
+                </Button>
+              ) : (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="relative h-8 w-8 rounded-full"
+                    >
+                      <Avatar className="h-9 w-9">
+                        <AvatarImage src="/avatars/03.png" alt={profile.name} />
+                        <AvatarFallback>
+                          {profile.name.charAt(0)}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="end" forceMount>
+                    <DropdownMenuLabel className="font-normal">
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm leading-none font-medium">
+                          {profile.name}
+                        </p>
+                        <p className="text-muted-foreground text-xs leading-none">
+                          {user.email}
+                        </p>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuGroup>
+                      <DropdownMenuItem asChild>
+                        <Link href={"/account"}>Profile</Link>
+                      </DropdownMenuItem>
+                    </DropdownMenuGroup>
+                    <DropdownMenuItem
+                      asChild
+                      onSelect={(e) => e.preventDefault()}
+                    >
+                      <form action="/auth/signout" method="post">
+                        <button className="button block" type="submit">
+                          Sign out
+                        </button>
+                      </form>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+              <ModeToggle />
             </div>
           </nav>
         </div>

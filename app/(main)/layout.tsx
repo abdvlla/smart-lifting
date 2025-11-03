@@ -1,5 +1,6 @@
 import Navbar from "@/components/navbar";
 import { createClient } from "@/utils/supabase/server";
+import { redirect } from "next/navigation";
 
 export default async function RootLayout({
   children,
@@ -12,6 +13,10 @@ export default async function RootLayout({
     data: { user },
   } = await supabase.auth.getUser();
 
+  if (!user) {
+    redirect("/signin");
+  }
+
   const { data, error, status } = await supabase
     .from("profiles")
     .select(`name, username, avatar_url`)
@@ -22,7 +27,7 @@ export default async function RootLayout({
     console.log(error);
   }
 
-  console.log("USER DATA:", data);
+  // console.log("USER DATA:", data); // for debugging
 
   return (
     <>
