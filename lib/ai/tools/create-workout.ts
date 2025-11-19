@@ -1,5 +1,6 @@
 import { tool } from "ai";
 import { z } from "zod";
+import type { WorkoutResult } from "@/lib/types/workouts";
 
 type Profile = {
   id: string;
@@ -16,35 +17,29 @@ type Ctx = {
 export function makeCreateWorkoutTool(ctx: Ctx) {
   return tool({
     description:
-      "Create a simple science-based hypertrophy plan using the user's profile (days_per_week, experience_level, sex).",
+      "Create a simple science-based hypertrophy plan using the user's profile (days_per_week, experience_level, sex). Do not suggest non-weighted exercises unless they have no access to weights.",
     inputSchema: z.object({
       days_per_week: z.number().int().min(2).max(6).optional(),
     }),
-    execute: async ({ days_per_week }) => {
+    execute: async ({ days_per_week }): Promise<WorkoutResult> => {
       const profile = await ctx.getProfileByUserId(ctx.userId);
 
       const dpw = days_per_week ?? profile?.days_per_week ?? 4;
 
-      const exp =
-        (profile?.experience_level as
-          | "novice"
-          | "intermediate"
-          | "advanced"
-          | undefined) ?? "intermediate";
+      // map your profile experience to volume level
+      const exp = profile?.experience_level ?? "intermediate";
 
-      // super light volume scaling by experience
       const setLevel =
-        exp === "novice"
+        exp === "beginner"
           ? { main: 2, aux: 1 }
           : exp === "advanced"
           ? { main: 3, aux: 2 }
           : { main: 3, aux: 2 }; // intermediate
 
-      // split: 4+ days -> Upper/Lower; else Full Body
       const isUL = dpw >= 4;
 
       const notes =
-        "Low volume, high intensity (RIR 0-1). Rest ≥2 min (3+ optimal). Work mainly in 5-10 reps. Progressive overload.";
+        "Low volume, high intensity (RIR 0-1). Rest ≥2 min (3+ optimal). Work mainly in 5-10 reps. Progressive overload. Rest time should be the same for main and auxiliary exercises.";
 
       if (isUL) {
         const Upper = [
@@ -71,7 +66,6 @@ export function makeCreateWorkoutTool(ctx: Ctx) {
           example: { Upper, Lower },
         };
       }
-
       // Full Body (2–3 days)
       const FullBody = [
         { name: "Machine chest press", sets: setLevel.main },

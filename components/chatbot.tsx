@@ -1,18 +1,23 @@
 "use client";
 
 import type React from "react";
-
 import { useChat } from "@ai-sdk/react";
 import { useState } from "react";
 import { User, BicepsFlexed } from "lucide-react";
+
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { MessageInput } from "./ui/message-input";
 import MarkdownRenderer from "./ui/markdown-renderer";
 import { useAutoScroll } from "@/hooks/use-auto-scroll";
+import { WorkoutCard } from "@/components/workout-card";
+import type { WorkoutResult } from "@/lib/types/workouts";
 
 export default function Chatbot() {
   const [input, setInput] = useState("");
-  const { messages, sendMessage } = useChat();
+
+  const { messages, sendMessage } = useChat({
+    api: "/api/chat",
+  } as any);
 
   const { containerRef, handleScroll, handleTouchStart } = useAutoScroll([
     messages,
@@ -27,7 +32,7 @@ export default function Chatbot() {
 
   return (
     <div className="flex flex-col w-full max-w-2xl mx-auto h-[95vh] p-4">
-      <div className="flex flex-col h-full bg-card rounded-2xl shadow-xl overflow-hidden border border-border/50">
+      <div className="flex flex-col h-full dark:bg-card bg-gray-100 rounded-2xl shadow-xl overflow-hidden border border-border/50">
         <div className="flex items-center gap-3 px-6 py-4 border-b border-border/50 bg-card">
           <Avatar className="h-10 w-10">
             <AvatarFallback className="bg-primary text-primary-foreground">
@@ -58,7 +63,7 @@ export default function Chatbot() {
                   Start a conversation
                 </h3>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Ask me anything and I'll do my best to help!
+                  Ask me anything about lifting or nutrition.
                 </p>
               </div>
             </div>
@@ -66,11 +71,27 @@ export default function Chatbot() {
 
           {messages.map((message) => {
             const isUser = message.role === "user";
-            const content =
-              message.parts
-                ?.filter((p) => p.type === "text")
+
+            const parts = ((message as any).parts ??
+              (message as any).content ??
+              []) as any[];
+
+            const textContent =
+              parts
+                .filter((p) => p.type === "text")
                 .map((p) => p.text)
                 .join("") ?? "";
+
+            const workoutOutputs: WorkoutResult[] = parts
+              .filter(
+                (p) =>
+                  p.type === "tool-createWorkout" &&
+                  p.state === "output-available" &&
+                  p.output
+              )
+              .map((p) => p.output as WorkoutResult);
+
+            const hasWorkout = !isUser && workoutOutputs.length > 0;
 
             return (
               <div
@@ -94,6 +115,7 @@ export default function Chatbot() {
                     )}
                   </AvatarFallback>
                 </Avatar>
+
                 <div
                   className={`flex flex-col gap-1 max-w-[80%] ${
                     isUser ? "items-end" : "items-start"
@@ -106,10 +128,18 @@ export default function Chatbot() {
                         : "bg-secondary text-secondary-foreground rounded-tl-sm"
                     }`}
                   >
-                    <div className="text-sm">
-                      <MarkdownRenderer>{content}</MarkdownRenderer>
+                    <div className="text-sm space-y-3">
+                      {textContent && !hasWorkout && (
+                        <MarkdownRenderer>{textContent}</MarkdownRenderer>
+                      )}
+
+                      {!isUser &&
+                        workoutOutputs.map((wo, idx) => (
+                          <WorkoutCard key={idx} result={wo} />
+                        ))}
                     </div>
                   </div>
+
                   <span className="text-xs text-muted-foreground px-2">
                     {new Date().toLocaleTimeString([], {
                       hour: "2-digit",
