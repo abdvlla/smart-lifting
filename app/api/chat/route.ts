@@ -68,5 +68,3 @@ export async function POST(req: Request) {
 
   return result.toUIMessageStreamResponse();
 }
-
-// Filter info instead of RAG

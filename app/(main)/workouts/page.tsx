@@ -3,10 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { createClient } from "@/utils/supabase/server";
 import { Dumbbell, Calendar, TrendingUp } from "lucide-react";
+import WorkoutModal from "./workout-modal";
+import DeleteWorkoutButton from "./delete-workout-button";
+import EditWorkoutModal from "./edit-workout-modal";
 
 export default async function Component() {
   const supabase = await createClient();
-  const { data: workouts, error } = await supabase
+  const { data: workouts } = await supabase
     .from("workouts")
     .select()
     .order("created_at", { ascending: false });
@@ -34,7 +37,7 @@ export default async function Component() {
       <main className="flex-1">
         <div className="container mx-auto px-6 py-12">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {workouts?.map((workout, index) => (
+            {workouts?.map((workout) => (
               <Card
                 key={workout.id}
                 className="group hover:shadow-xl transition-all duration-300 border-border/50 hover:border-primary/30 overflow-hidden"
@@ -70,9 +73,11 @@ export default async function Component() {
                   </div>
 
                   {/* Action Button */}
-                  <Button className="w-full transition-all" variant="outline">
-                    View Workout
-                  </Button>
+                  <div className="space-x-2">
+                    <WorkoutModal workout={workout} />
+                    <EditWorkoutModal workout={workout} />
+                    <DeleteWorkoutButton id={workout.id} />
+                  </div>
                 </CardContent>
               </Card>
             ))}

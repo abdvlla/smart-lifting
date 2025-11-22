@@ -5,6 +5,7 @@ import type { WorkoutResult } from "@/lib/types/workouts";
 import { saveWorkoutAction } from "@/lib/workout";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { Spinner } from "./ui/spinner";
 
 export function WorkoutCard({ result }: { result: WorkoutResult }) {
   const [isPending, startTransition] = useTransition();
@@ -67,7 +68,14 @@ export function WorkoutCard({ result }: { result: WorkoutResult }) {
         onClick={handleSave}
         disabled={isPending || saved}
       >
-        {saved ? "Saved" : isPending ? "Saving..." : "Save workout"}
+        {isPending ? (
+          <>
+            <Spinner />
+            <span>Saving Workout...</span>
+          </>
+        ) : (
+          "Save Workout"
+        )}
       </Button>
     </div>
   );
