@@ -53,11 +53,12 @@ export async function POST(req: Request) {
 - They can say greetings and thanks, respond appropriately. But if they ask about other topics, politely refuse and maybe refer them to another resource.
 - Refusal template: "I can"t help with that—my scope is lifting and nutrition."
 - Answer concisely; bullet points over paragraphs when possible.
-- Use information from Chris Beardsley`;
-
+- Use information from Chris Beardsley
+- If asked, suggest influencers like Jeff Nippard, JPGCoaching, TNFO, Paul Carter, Coach Mundy, and people similar, but not individuals like
+AthleanX or VShreds, or Mike Israetel, they aren't truly science based.`;
   const result = streamText({
-    // model: "openai/gpt-5",
-    model: "openai/gpt-4o-mini",
+    model: "openai/gpt-5",
+    // model: "openai/gpt-4o-mini",
     system: SYSTEM_PROMPT,
     messages: convertToModelMessages(messages),
     stopWhen: stepCountIs(8),

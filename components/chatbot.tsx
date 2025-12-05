@@ -1,6 +1,6 @@
 "use client";
 
-import type React from "react";
+import React from "react";
 import { useChat } from "@ai-sdk/react";
 import { useState } from "react";
 import {
@@ -40,6 +40,16 @@ export default function Chatbot() {
   const handleQuickAction = (prompt: string) => {
     sendMessage({ text: prompt });
   };
+
+  const uniqueMessages = React.useMemo(() => {
+    const seen = new Set<string>();
+    return messages.filter((m) => {
+      if (!m.id) return true;
+      if (seen.has(m.id)) return false;
+      seen.add(m.id);
+      return true;
+    });
+  }, [messages]);
 
   return (
     <div className="flex flex-col w-full max-w-3xl mx-auto h-[95vh] p-4">
@@ -111,7 +121,7 @@ export default function Chatbot() {
             </div>
           )}
 
-          {messages.map((message, idx) => {
+          {uniqueMessages.map((message, idx) => {
             const isUser = message.role === "user";
 
             const parts = ((message as any).parts ??
@@ -137,7 +147,7 @@ export default function Chatbot() {
 
             return (
               <div
-                key={message.id}
+                key={`${message.id}-${idx}`}
                 className={`flex gap-3 animate-in slide-in-from-bottom-2 duration-300 ${
                   isUser ? "flex-row-reverse" : "flex-row"
                 }`}
